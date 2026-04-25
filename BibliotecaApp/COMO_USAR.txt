@@ -1,0 +1,265 @@
+COMO USAR O PROJETO
+
+ESTRUTURA DE DIRETORIOS
+
+BibliotecaApp/
+├── src/                      Codigo fonte
+│   ├── Main.java            Classe principal com demonstracao
+│   ├── interface_/          Interface definitions
+│   │   ├── Emprestavel.java Interface para operacoes de emprestimo
+│   │   └── Buscavel.java    Interface para buscas
+│   ├── modelo/              Modelos de dados
+│   │   ├── Material.java    Classe abstrata base
+│   │   ├── Livro.java       Implementacao de Livro
+│   │   ├── Revista.java     Implementacao de Revista
+│   │   ├── DVD.java         Implementacao de DVD
+│   │   ├── Usuario.java     Modelo de Usuario
+│   │   └── Emprestimo.java  Modelo de Emprestimo
+│   └── servico/             Servicos e logica de negocio
+│       └── BibliotecaService.java Orquestrador principal
+├── bin/                      Arquivos compilados (.class)
+├── README.md                Documentacao principal
+├── EXTENSOES.md             Exemplos de extensoes
+└── COMO_USAR.txt           Este arquivo
+
+COMPILACAO
+
+Metodo 1: Compilacao Manual
+---
+cd c:\Users\Termineitor\Desktop\java\BibliotecaApp
+mkdir bin
+javac -d bin src/interface_/*.java src/modelo/*.java src/servico/*.java src/Main.java
+---
+
+Metodo 2: Com Script (Se usar Windows)
+Criar arquivo compile.bat:
+---
+@echo off
+cd %~dp0
+mkdir bin
+javac -d bin src/interface_/*.java src/modelo/*.java src/servico/*.java src/Main.java
+echo Compilacao concluida!
+pause
+---
+
+EXECUCAO
+
+Execucao Basica:
+---
+java -cp bin Main
+---
+
+ESTRUTURA DE CLASSES DETALHADA
+
+1. INTERFACES (pacote interface_)
+
+Emprestavel
+- Contrato para operacoes de emprestimo
+- Metodos: podeSerEmprestado(), registrarEmprestimo(), registrarDevolucao(), getDiasDisponivel()
+
+Buscavel
+- Contrato para operacoes de busca
+- Metodos: contem(), getIdentificador()
+
+2. MODELOS (pacote modelo)
+
+Material (classe abstrata)
+- Base para todos os tipos de materiais
+- Atributos: titulo, autor, id, emprestado, usuarioAtual, diasDisponivel
+- Implementa: Emprestavel, Buscavel
+- Metodo abstrato: getTipo()
+
+Livro extends Material
+- Especializacao para livros
+- Atributos adicionais: isbn, numeroPaginas, editora
+- Periodo de emprestimo: 14 dias
+
+Revista extends Material
+- Especializacao para revistas
+- Atributos adicionais: numero, mes, ano
+- Periodo de emprestimo: 7 dias
+
+DVD extends Material
+- Especializacao para DVDs
+- Atributos adicionais: diretor, duracao, genero
+- Periodo de emprestimo: 7 dias
+
+Usuario
+- Representa um usuario da biblioteca
+- Atributos: nome, email, cpf, emprestimosAtivos
+- Rastreia emprestimos ativos do usuario
+
+Emprestimo
+- Rastreia um emprestimo especifico
+- Atributos: id, idMaterial, nomeUsuario, dataEmprestimo, dataPrevistaDevolucao, dataDevolucao
+- Detecta emprestimos atrasados
+
+3. SERVICOS (pacote servico)
+
+BibliotecaService
+- Orquestrador central de operacoes
+- Gerencia: acervo, usuarios, emprestimos
+- Metodos principales:
+  * adicionarMaterial(Material) - Adiciona material ao acervo
+  * registrarUsuario(Usuario) - Registra novo usuario
+  * buscarMaterialPorId(String) - Busca por ID
+  * buscarMaterialPorTermo(String) - Busca por titulo/autor
+  * realizarEmprestimo(String, String) - Emprestar material
+  * realizarDevolucao(String, String) - Devolver material
+  * listarMateriasDisponiveis() - Lista materiais livres
+  * listarMateriasEmprestadas() - Lista materiais emprestados
+  * listarEmprestimosAtrasados() - Lista atrasados
+
+FLUXO DE OPERACAO
+
+1. Inicializacao
+   BibliotecaService biblioteca = new BibliotecaService();
+
+2. Adicionar Materiais
+   Material livro = new Livro(...);
+   biblioteca.adicionarMaterial(livro);
+
+3. Registrar Usuarios
+   Usuario usuario = new Usuario(...);
+   biblioteca.registrarUsuario(usuario);
+
+4. Emprestar Material
+   biblioteca.realizarEmprestimo(idMaterial, nomeUsuario);
+
+5. Devolver Material
+   biblioteca.realizarDevolucao(idMaterial, nomeUsuario);
+
+6. Consultas
+   biblioteca.buscarMaterialPorTermo("termo");
+   biblioteca.listarMateriasDisponiveis();
+   biblioteca.listarEmprestimosAtrasados();
+
+EXEMPLOS DE USO
+
+Exemplo 1: Adicionar Materiais
+---
+Livro livro = new Livro(
+    "Clean Code",
+    "Robert C. Martin",
+    "L001",
+    "978-0132350884",
+    464,
+    "Prentice Hall"
+);
+biblioteca.adicionarMaterial(livro);
+
+Revista revista = new Revista(
+    "Java Magazine",
+    "Oracle",
+    "R001",
+    125,
+    "Abril",
+    2025
+);
+biblioteca.adicionarMaterial(revista);
+
+DVD dvd = new DVD(
+    "The Matrix",
+    "Wachowski",
+    "D001",
+    "Wachowski",
+    136,
+    "Ficcao Cientifica"
+);
+biblioteca.adicionarMaterial(dvd);
+---
+
+Exemplo 2: Registrar Usuarios
+---
+Usuario usuario1 = new Usuario("Joao Silva", "joao@email.com", "123.456.789-00");
+Usuario usuario2 = new Usuario("Maria Santos", "maria@email.com", "987.654.321-00");
+
+biblioteca.registrarUsuario(usuario1);
+biblioteca.registrarUsuario(usuario2);
+---
+
+Exemplo 3: Emprestar Material
+---
+boolean sucesso = biblioteca.realizarEmprestimo("L001", "Joao Silva");
+if (sucesso) {
+    System.out.println("Emprestimo realizado com sucesso!");
+}
+---
+
+Exemplo 4: Buscar Materiais
+---
+List<Material> resultados = biblioteca.buscarMaterialPorTermo("Java");
+resultados.forEach(m -> System.out.println(m.getTitulo()));
+---
+
+Exemplo 5: Listar Materiais Disponiveis
+---
+List<Material> disponiveis = biblioteca.listarMateriasDiponiveis();
+System.out.println("Materiais disponiveis: " + disponiveis.size());
+disponiveis.forEach(System.out::println);
+---
+
+TRATAMENTO DE ERROS
+
+O sistema valida operacoes e fornece feedback:
+
+1. Material nao encontrado
+   Mensagem: "Erro: Material nao esta disponivel"
+
+2. Usuario nao registrado
+   Mensagem: "Erro: Material ou usuario nao encontrado"
+
+3. Emprestimo para material ja emprestado
+   Mensagem: "Erro: Material nao esta disponivel para emprestimo"
+
+4. Devolucao de material nao emprestado
+   Mensagem: "Erro: Material nao foi emprestado"
+
+DICAS DE DESENVOLVIMENTO
+
+1. Sempre compilar antes de executar:
+   javac -d bin src/**/*.java src/Main.java
+
+2. Usar nomes significativos para IDs de materiais (L001, R001, D001, etc)
+
+3. Validar entrada de dados (emails, CPF, etc) em producao
+
+4. Considerar persistencia em banco de dados para aplicacao real
+
+5. Adicionar testes unitarios para cada classe
+
+6. Usar logging em producao
+
+7. Implementar paginacao para listas grandes
+
+8. Adicionar interface grafica (Swing, JavaFX) para uso final
+
+PROXIMOS PASSOS
+
+Para melhorar o projeto:
+1. Adicionar sistema de autenticacao
+2. Implementar persistencia em banco de dados (JDBC, JPA/Hibernate)
+3. Criar API REST (Spring Boot)
+4. Adicionar interface web (JSP, Thymeleaf)
+5. Implementar testes unitarios (JUnit, Mockito)
+6. Adicionar validacao de entrada robusta
+7. Criar sistema de relatorios
+8. Implementar cache para performance
+
+RECURSOS ADICIONAIS
+
+Java Fundamentals:
+- docs.oracle.com/javase/tutorial/
+- www.oracle.com/java/technologies/
+
+Design Patterns:
+- refactoring.guru/design-patterns/java
+- www.baeldung.com/
+
+OOP Principles:
+- SOLID Principles: en.wikipedia.org/wiki/SOLID
+- Clean Code: Robert C. Martin
+
+Suporte:
+- Stack Overflow: stackoverflow.com/questions/tagged/java
+- Java Documentation: docs.oracle.com

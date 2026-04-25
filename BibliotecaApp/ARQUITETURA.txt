@@ -1,0 +1,304 @@
+ARQUITETURA E DIAGRAMA DE CLASSES
+
+DIAGRAMA DE HIERARQUIA
+
+┌─────────────────────────────────────────────────────────────┐
+│                  Interfaces (Contratos)                     │
+├─────────────────────┬───────────────────────────────────────┤
+│   Emprestavel       │         Buscavel                       │
+├─────────────────────┼───────────────────────────────────────┤
+│ + podeSerEmprestado│ + contem(termo)                        │
+│ + registrarEmprést│ + getIdentificador()                    │
+│ + registrarDevolução│                                        │
+│ + getDiasDisponível │                                        │
+└──────────┬──────────┴───────────────┬───────────────────────┘
+           │ implementa               │ implementa
+           │                          │
+           ▼                          ▼
+┌────────────────────────────────────────────────────┐
+│         Material (Classe Abstrata)                 │
+├────────────────────────────────────────────────────┤
+│ - titulo: String                                   │
+│ - autor: String                                    │
+│ - id: String                                       │
+│ - emprestado: boolean                              │
+│ - usuarioAtual: String                             │
+│ - diasDisponivel: int                              │
+├────────────────────────────────────────────────────┤
+│ + getTitulo(): String                              │
+│ + getAutor(): String                               │
+│ + getId(): String                                  │
+│ + podeSerEmprestado(): boolean                     │
+│ + registrarEmprestimo(usuario): void               │
+│ + registrarDevolucao(): void                       │
+│ + getTipo(): String (abstrato)                     │
+└─┬──────────────────────┬──────────────────────┬────┘
+  │ herda                │ herda                │ herda
+  │                      │                      │
+  ▼                      ▼                      ▼
+┌──────────────┐   ┌──────────────┐   ┌────────────────┐
+│    Livro     │   │   Revista    │   │      DVD       │
+├──────────────┤   ├──────────────┤   ├────────────────┤
+│ - isbn       │   │ - numero     │   │ - diretor      │
+│ - paginas    │   │ - mes        │   │ - duracao      │
+│ - editora    │   │ - ano        │   │ - genero       │
+├──────────────┤   ├──────────────┤   ├────────────────┤
+│ getTipo()    │   │ getTipo()    │   │ getTipo()      │
+│ "Livro"      │   │ "Revista"    │   │ "DVD"          │
+│ Prazo: 14d   │   │ Prazo: 7d    │   │ Prazo: 7d      │
+└──────────────┘   └──────────────┘   └────────────────┘
+
+
+DIAGRAMA DE RELACIONAMENTOS
+
+┌─────────────────────────────────────────────────────────────┐
+│                  BibliotecaService                          │
+├─────────────────────────────────────────────────────────────┤
+│ - acervo: List<Material>                                    │
+│ - usuarios: List<Usuario>                                   │
+│ - emprestimos: List<Emprestimo>                             │
+├─────────────────────────────────────────────────────────────┤
+│ + adicionarMaterial(Material)                               │
+│ + registrarUsuario(Usuario)                                 │
+│ + buscarMaterialPorId(id)                                   │
+│ + buscarMaterialPorTermo(termo)                             │
+│ + realizarEmprestimo(idMaterial, nomeUsuario)               │
+│ + realizarDevolucao(idMaterial, nomeUsuario)                │
+│ + listarMateriasDisponiveis()                               │
+│ + listarEmprestimosAtrasados()                              │
+└────┬────────────────────┬────────────────────┬──────────────┘
+     │ gerencia 0..N      │ gerencia 0..N      │ gerencia 0..N
+     │                    │                    │
+     ▼                    ▼                    ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────────┐
+│   Material   │   │    Usuario   │   │    Emprestimo    │
+├──────────────┤   ├──────────────┤   ├──────────────────┤
+│ - titulo     │   │ - nome       │   │ - id             │
+│ - autor      │   │ - email      │   │ - idMaterial     │
+│ - id         │   │ - cpf        │   │ - nomeUsuario    │
+│ - emprestado │   │ - emprestimos│   │ - dataEmprest    │
+│ - usuario    │   │              │   │ - dataDevPlaned  │
+│              │   │              │   │ - dataDevolucao  │
+└──────────────┘   └──────────────┘   └──────────────────┘
+     ▲                   ▲                     ▲
+     │                   │                     │
+     │ contém            │ referencia          │ referencia
+     │                   │                     │
+     └───────────────────┴─────────────────────┘
+
+
+FLUXO DE DADOS
+
+1. ADICIONAR MATERIAL
+   ┌─────────────┐
+   │ Main.java   │
+   └──────┬──────┘
+          │ new Livro/Revista/DVD
+          ▼
+   ┌─────────────────────┐
+   │ Material Concreto   │
+   └──────┬──────────────┘
+          │ adicionarMaterial()
+          ▼
+   ┌─────────────────────────────────┐
+   │ BibliotecaService.acervo        │
+   │ List<Material>                  │
+   └─────────────────────────────────┘
+
+2. REGISTRAR USUARIO
+   ┌─────────────┐
+   │ Main.java   │
+   └──────┬──────┘
+          │ new Usuario
+          ▼
+   ┌─────────────────────┐
+   │ Usuario             │
+   └──────┬──────────────┘
+          │ registrarUsuario()
+          ▼
+   ┌─────────────────────────────────┐
+   │ BibliotecaService.usuarios      │
+   │ List<Usuario>                   │
+   └─────────────────────────────────┘
+
+3. EMPRESTAR MATERIAL
+   ┌─────────────────────────────────────────────────────┐
+   │ Main.java                                           │
+   │ realizarEmprestimo(idMaterial, nomeUsuario)        │
+   └──────┬──────────────────────────────────────────────┘
+          │
+          ▼
+   ┌──────────────────────────────────────────────────┐
+   │ BibliotecaService                                │
+   │ 1. buscarMaterialPorId(idMaterial)               │
+   │ 2. buscarUsuarioPorNome(nomeUsuario)             │
+   │ 3. validar disponibilidade                       │
+   └──────┬────┬────────────────────────────────────┬─┘
+          │    │                                    │
+          ▼    ▼                                    ▼
+   ┌──────────┐ ┌──────────┐                ┌─────────────┐
+   │ Material │ │ Usuario  │                │ Emprestimo  │
+   │ -emprést │ │ +emprest │                │ (novo)      │
+   │  ado=true│ │ (item id)│                │             │
+   └──────────┘ └──────────┘                └─────────────┘
+          │              │                         │
+          │              │ adiciona                │ armazena
+          │              └────────┬────────────────┘
+          │                       ▼
+          │              BibliotecaService.
+          │              emprestimos.add()
+
+
+DIAGRAMA DE SEQUENCIA - EMPRESTIMO
+
+Main
+ │
+ ├─ realizarEmprestimo("L001", "João")
+ │
+ ▼
+BibliotecaService
+ │
+ ├─ buscarMaterialPorId("L001")
+ │  └─▶ acervo.stream().filter().findFirst()
+ │  └─▶ return Optional<Material>
+ │
+ ├─ buscarUsuarioPorNome("João")
+ │  └─▶ usuarios.stream().filter().findFirst()
+ │  └─▶ return Optional<Usuario>
+ │
+ ├─ material.podeSerEmprestado()
+ │  └─▶ return !emprestado
+ │
+ ├─ material.registrarEmprestimo("João")
+ │  └─▶ emprestado = true
+ │  └─▶ usuarioAtual = "João"
+ │
+ ├─ usuario.adicionarEmprestimo("L001")
+ │  └─▶ emprestimosAtivos.add("L001")
+ │
+ ├─ new Emprestimo("L001", "João", 14)
+ │  └─▶ id = UUID
+ │  └─▶ dataEmprestimo = LocalDate.now()
+ │  └─▶ dataPrevistaDevolucao = now + 14 dias
+ │
+ └─ emprestimos.add(emp)
+
+
+PADROES DE DESIGN
+
+1. ABSTRACT FACTORY (Implicito)
+   Material atua como factory base
+   Subclasses (Livro, Revista, DVD) sao products
+
+2. STRATEGY
+   BibliotecaService encapsula diferentes estrategias
+   (buscar, emprestar, devolver)
+
+3. TEMPLATE METHOD
+   Material define a estrutura (template) em getTipo()
+   Subclasses implementam a especializacao
+
+4. SERVICE LOCATOR
+   BibliotecaService localiza recursos (materiais, usuarios)
+
+5. REPOSITORY
+   BibliotecaService atua como repositorio (armazena/recupera dados)
+
+
+PRINCIPIOS SOLID
+
+1. SRP - Single Responsibility
+   ┌─────────────────────────────────────────────┐
+   │ Material - Responsavel por dados do material │
+   │ Usuario - Responsavel por dados do usuario   │
+   │ Emprestimo - Responsavel por rastrear empres│
+   │ BibliotecaService - Responsavel por orquestra│
+   └─────────────────────────────────────────────┘
+
+2. OCP - Open/Closed
+   ┌──────────────────────────────────────────┐
+   │ Aberto para extensao (novo tipo?)        │
+   │ Fechado para modificacao                 │
+   │                                          │
+   │ Criar Audiolivro extends Material        │
+   │ BibliotecaService funciona automaticamente│
+   └──────────────────────────────────────────┘
+
+3. LSP - Liskov Substitution
+   ┌──────────────────────────────────────────┐
+   │ Qualquer Material pode substituir outro   │
+   │ Livro, Revista e DVD sao intercambiáveis │
+   │ em contextos que usam Material           │
+   └──────────────────────────────────────────┘
+
+4. ISP - Interface Segregation
+   ┌──────────────────────────────────────────┐
+   │ Emprestavel - para operacoes de emprést │
+   │ Buscavel - para operacoes de busca       │
+   │ Interfaces pequenas e focadas            │
+   └──────────────────────────────────────────┘
+
+5. DIP - Dependency Inversion
+   ┌──────────────────────────────────────────┐
+   │ BibliotecaService depende de abstraoes   │
+   │ (Material, Usuario) nao implementacoes    │
+   │ Facilita testes e extensoes              │
+   └──────────────────────────────────────────┘
+
+
+MAPEAMENTO DE PERSISTENCIA (Para banco de dados)
+
+TABELAS NECESSARIAS:
+
+MATERIAIS
+┌────────────┬──────────┬──────────────────────┐
+│ id         │ tipo     │ dados_json           │
+├────────────┼──────────┼──────────────────────┤
+│ L001       │ Livro    │ {...isbn...}         │
+│ R001       │ Revista  │ {...numero...}       │
+│ D001       │ DVD      │ {...diretor...}      │
+└────────────┴──────────┴──────────────────────┘
+
+USUARIOS
+┌────────────┬─────────────┬──────────┬────────────────┐
+│ nome       │ email       │ cpf      │ data_cadastro  │
+├────────────┼─────────────┼──────────┼────────────────┤
+│ João Silva │ joao@...    │ 123...   │ 2026-04-24     │
+└────────────┴─────────────┴──────────┴────────────────┘
+
+EMPRESTIMOS
+┌────────────┬─────────────┬────────────┬──────────────┬────────────┐
+│ id         │ id_material │ nome_user  │ data_emprés  │ data_devol │
+├────────────┼─────────────┼────────────┼──────────────┼────────────┤
+│ uuid-123   │ L001        │ João Silva │ 2026-04-24   │ 2026-05-08 │
+└────────────┴─────────────┴────────────┴──────────────┴────────────┘
+
+
+ESCALABILIDADE
+
+Versao Atual (Em Memoria)
+└─ Adequada para: Prototipo, Educacao, Testes
+
+Versao com Banco de Dados
+├─ Adequada para: Producao pequena/media
+└─ Implementacao: JDBC, JPA/Hibernate
+
+Versao Distribuida
+├─ Adequada para: Producao grande
+├─ Arquitetura: Microservicos
+└─ Implementacao: Spring Cloud, Docker, Kubernetes
+
+
+PERFORMANCE E OTIMIZACOES
+
+Otimizacoes Atuais:
+- Busca linear O(n) em listas pequenas OK
+- Uso de streams da Java 8+ para operacoes funcionais
+- Optional para null-safety
+
+Futuras Otimizacoes:
+- Indice por ID para O(1) lookup: Map<String, Material>
+- Cache com LRU eviction
+- Paginacao para listas grandes
+- Banco de dados com indices apropriados
+- API REST com cache HTTP

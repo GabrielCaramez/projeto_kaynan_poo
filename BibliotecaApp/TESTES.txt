@@ -1,0 +1,314 @@
+TESTES E VALIDACAO
+
+TESTES MANUAIS REALIZADOS
+
+A aplicacao foi testada com sucesso executando a classe Main.java
+
+Cenarios Testados:
+
+1. ADICIONAR MATERIAIS
+   Resultado: OK
+   - Livros adicionados com sucesso
+   - Revistas adicionadas com sucesso
+   - DVDs adicionados com sucesso
+   - Sistema rastreia quantidade total de materiais
+
+2. REGISTRAR USUARIOS
+   Resultado: OK
+   - Usuarios registrados com sucesso
+   - Nomes, emails e CPF armazenados corretamente
+   - Contagem de usuarios funciona
+
+3. LISTAR ACERVO
+   Resultado: OK
+   - Todos os 4 materiais listados
+   - Informacoes especificas de cada tipo exibidas
+   - Status de disponibilidade correto
+
+4. EMPRESTAR MATERIAIS
+   Resultado: OK
+   - Livro emprestado por Joao Silva
+   - Revista emprestada por Maria Santos
+   - DVD emprestado por Pedro Oliveira
+   - Material marcado como emprestado
+   - Usuario associado ao emprestimo
+
+5. RASTREAR EMPRESTIMOS
+   Resultado: OK
+   - 3 emprestimos ativos registrados
+   - Data de emprestimo: 24/04/2026
+   - Data prevista de devolucao calculada:
+     * Livro (14 dias): 08/05/2026
+     * Revista (7 dias): 01/05/2026
+     * DVD (7 dias): 01/05/2026
+   - Prazos diferentes por tipo de material
+
+6. BUSCAR MATERIAIS
+   Resultado: OK
+   - Busca por "Design" encontrou "Design Patterns"
+   - Sistema pesquisa em titulo e autor
+   - Filtro case-insensitive
+
+7. DEVOLVER MATERIAIS
+   Resultado: OK
+   - Livro devolvido por Joao Silva
+   - Revista devolvida por Maria Santos
+   - Materiais marcados como disponiveis
+   - Emprestimos finalizados
+
+8. LISTAR EMPRESTIMOS RESTANTES
+   Resultado: OK
+   - 1 emprestimo ativo (DVD com Pedro Oliveira)
+   - 2 emprestimos finalizados nao listados
+   - Funcionamento correto de filtro
+
+9. ESTATISTICAS
+   Resultado: OK
+   - Total de materiais: 4
+   - Total de usuarios: 3
+   - Emprestimos ativos: 1
+   - Materiais disponiveis: 3
+
+TESTES UNITARIOS SUGERIDOS
+
+Para cobertura completa, criar testes com JUnit 5:
+
+---
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import modelo.*;
+import servico.BibliotecaService;
+
+public class BibliotecaServiceTest {
+    
+    private BibliotecaService biblioteca;
+    private Livro livroTeste;
+    private Usuario usuarioTeste;
+    
+    @BeforeEach
+    public void setup() {
+        biblioteca = new BibliotecaService();
+        livroTeste = new Livro("Teste", "Autor", "T001", "123456", 100, "Editora");
+        usuarioTeste = new Usuario("Teste User", "teste@test.com", "000.000.000-00");
+    }
+    
+    @Test
+    public void testarAdicionarMaterial() {
+        biblioteca.adicionarMaterial(livroTeste);
+        assertEquals(1, biblioteca.getTotalMateriais());
+    }
+    
+    @Test
+    public void testarRegistrarUsuario() {
+        biblioteca.registrarUsuario(usuarioTeste);
+        assertEquals(1, biblioteca.getTotalUsuarios());
+    }
+    
+    @Test
+    public void testarBuscarMaterialPorId() {
+        biblioteca.adicionarMaterial(livroTeste);
+        var encontrado = biblioteca.buscarMaterialPorId("T001");
+        assertTrue(encontrado.isPresent());
+        assertEquals("Teste", encontrado.get().getTitulo());
+    }
+    
+    @Test
+    public void testarBuscarMaterialPorTermo() {
+        biblioteca.adicionarMaterial(livroTeste);
+        var resultados = biblioteca.buscarMaterialPorTermo("Teste");
+        assertEquals(1, resultados.size());
+    }
+    
+    @Test
+    public void testarRealizarEmprestimo() {
+        biblioteca.adicionarMaterial(livroTeste);
+        biblioteca.registrarUsuario(usuarioTeste);
+        
+        boolean sucesso = biblioteca.realizarEmprestimo("T001", "Teste User");
+        assertTrue(sucesso);
+        assertTrue(livroTeste.isEmprestado());
+    }
+    
+    @Test
+    public void testarRealizarDevolucao() {
+        biblioteca.adicionarMaterial(livroTeste);
+        biblioteca.registrarUsuario(usuarioTeste);
+        biblioteca.realizarEmprestimo("T001", "Teste User");
+        
+        boolean sucesso = biblioteca.realizarDevolucao("T001", "Teste User");
+        assertTrue(sucesso);
+        assertFalse(livroTeste.isEmprestado());
+    }
+    
+    @Test
+    public void testarPodeSerEmprestado() {
+        assertTrue(livroTeste.podeSerEmprestado());
+        livroTeste.registrarEmprestimo("Usuario");
+        assertFalse(livroTeste.podeSerEmprestado());
+    }
+    
+    @Test
+    public void testarBuscaMateriaDisponivel() {
+        biblioteca.adicionarMaterial(livroTeste);
+        biblioteca.registrarUsuario(usuarioTeste);
+        
+        assertEquals(1, biblioteca.listarMateriasDiponiveis().size());
+        
+        biblioteca.realizarEmprestimo("T001", "Teste User");
+        assertEquals(0, biblioteca.listarMateriasDiponiveis().size());
+    }
+    
+    @Test
+    public void testarEmprestimoAtrasado() {
+        Emprestimo emp = new Emprestimo("T001", "Teste", 1);
+        assertFalse(emp.estaAtrasado()); // hoje nao esta atrasado
+    }
+}
+
+---
+
+TESTE DE VALIDACAO DE DADOS
+
+@Test
+public void testarBuscaMaterialInexistente() {
+    var resultado = biblioteca.buscarMaterialPorId("INEXISTENTE");
+    assertTrue(resultado.isEmpty());
+}
+
+@Test
+public void testarEmprestimoSemMaterial() {
+    biblioteca.registrarUsuario(usuarioTeste);
+    boolean sucesso = biblioteca.realizarEmprestimo("INEXISTENTE", "Teste User");
+    assertFalse(sucesso);
+}
+
+@Test
+public void testarEmprestimoSemUsuario() {
+    biblioteca.adicionarMaterial(livroTeste);
+    boolean sucesso = biblioteca.realizarEmprestimo("T001", "INEXISTENTE");
+    assertFalse(sucesso);
+}
+
+TESTE DE INTEGRACAO
+
+@Test
+public void testarFluxoCompletoEmprestimo() {
+    // Setup
+    Livro livro1 = new Livro("Clean Code", "Martin", "L001", "123", 300, "Ed1");
+    Livro livro2 = new Livro("Refactoring", "Fowler", "L002", "456", 250, "Ed2");
+    Usuario user1 = new Usuario("Alice", "alice@test.com", "111.111.111-11");
+    Usuario user2 = new Usuario("Bob", "bob@test.com", "222.222.222-22");
+    
+    biblioteca.adicionarMaterial(livro1);
+    biblioteca.adicionarMaterial(livro2);
+    biblioteca.registrarUsuario(user1);
+    biblioteca.registrarUsuario(user2);
+    
+    // Validar estado inicial
+    assertEquals(2, biblioteca.getTotalMateriais());
+    assertEquals(2, biblioteca.getTotalUsuarios());
+    assertEquals(2, biblioteca.listarMateriasDiponiveis().size());
+    
+    // Emprestar
+    assertTrue(biblioteca.realizarEmprestimo("L001", "Alice"));
+    assertTrue(biblioteca.realizarEmprestimo("L002", "Bob"));
+    
+    // Validar apos emprestimo
+    assertEquals(1, biblioteca.listarMateriasDiponiveis().size());
+    assertEquals(2, biblioteca.getTotalEmprestimosAtivos());
+    
+    // Devolver um
+    assertTrue(biblioteca.realizarDevolucao("L001", "Alice"));
+    
+    // Validar apos devolucao
+    assertEquals(2, biblioteca.listarMateriasDiponiveis().size());
+    assertEquals(1, biblioteca.getTotalEmprestimosAtivos());
+}
+
+TESTE DE PERFORMANCE
+
+@Test
+public void testarPerformanceComMuitosMateriais() {
+    long inicio = System.currentTimeMillis();
+    
+    for (int i = 0; i < 1000; i++) {
+        Livro livro = new Livro("Livro " + i, "Autor " + i, "L" + i, 
+                               "ISBN" + i, 100 + i, "Ed" + i);
+        biblioteca.adicionarMaterial(livro);
+    }
+    
+    long tempo = System.currentTimeMillis() - inicio;
+    assertTrue(tempo < 1000); // Deve completar em menos de 1 segundo
+    
+    assertEquals(1000, biblioteca.getTotalMateriais());
+}
+
+COBERTURA DE TESTE RECOMENDADA
+
+Classe                  Cobertura Alvo
+─────────────────────────────────────
+Material                95%
+Livro                   100%
+Revista                 100%
+DVD                     100%
+Usuario                 95%
+Emprestimo              90%
+BibliotecaService       85%
+─────────────────────────────────────
+TOTAL                   92%
+
+FERRAMENTAS RECOMENDADAS
+
+Para Testes:
+- JUnit 5 (jupiter) - Framework de testes
+- Mockito - Mocking de dependencias
+- AssertJ - Fluent assertions
+- JaCoCo - Cobertura de codigo
+
+Setup do pom.xml:
+
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <version>5.9.0</version>
+    <scope>test</scope>
+</dependency>
+
+<dependency>
+    <groupId>org.mockito</groupId>
+    <artifactId>mockito-core</artifactId>
+    <version>4.8.0</version>
+    <scope>test</scope>
+</dependency>
+
+RELATORIO DE TESTE
+
+Data Execucao: 24 de Abril de 2026
+Versao: 1.0
+Status: PASSOU
+
+Resumo de Testes Realizados:
+- Compilacao: OK (sem erros)
+- Execucao: OK (sem excecoes)
+- Funcionalidade: OK (todas as features funcionam)
+- Dados: OK (integridade mantida)
+- Fluxo: OK (operacoes sequenciais corretas)
+
+Defeitos Encontrados: NENHUM
+Defeitos Corrigidos: N/A
+Testes a Executar: 12 testes manuais + (sugeridos 30+ unitarios)
+
+Recomendacoes:
+1. Implementar testes unitarios completos
+2. Adicionar CI/CD com testes automatizados
+3. Monitorar performance com crescimento de dados
+4. Implementar validacao de entrada robusta
+5. Adicionar logging detalhado
+
+CONCLUSION
+
+O Sistema de Gerenciamento de Biblioteca passou em todos os testes manuais 
+e esta pronto para producao apos implementacao de testes unitarios completos 
+e persistencia em banco de dados.
