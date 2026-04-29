@@ -93,12 +93,14 @@ public class BibliotecaGUI extends JFrame {
         modelo.addColumn("Tipo");
         modelo.addColumn("Titulo");
         modelo.addColumn("Autor");
+        modelo.addColumn("Detalhes Especificos");
         modelo.addColumn("Status");
         
         JTable tabela = new JTable(modelo);
         tabela.setFont(new Font("Arial", Font.PLAIN, 12));
         tabela.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
         tabela.setRowHeight(25);
+        tabela.getColumnModel().getColumn(4).setPreferredWidth(200);
         
         JScrollPane scroll = new JScrollPane(tabela);
         aba.add(scroll, BorderLayout.CENTER);
@@ -132,11 +134,31 @@ public class BibliotecaGUI extends JFrame {
         
         for (Material m : materiais) {
             String status = m.podeSerEmprestado() ? "Disponivel" : "Emprestado";
+            String detalhes = "";
+            
+            if (m instanceof Livro) {
+                Livro livro = (Livro) m;
+                detalhes = "ISBN: " + (livro.getIsbn().isEmpty() ? "N/A" : livro.getIsbn()) + 
+                           " | Paginas: " + (livro.getNumeroPaginas() == 0 ? "N/A" : livro.getNumeroPaginas()) +
+                           " | Editora: " + (livro.getEditora().isEmpty() ? "N/A" : livro.getEditora());
+            } else if (m instanceof Revista) {
+                Revista revista = (Revista) m;
+                detalhes = "Numero: " + (revista.getNumero() == 0 ? "N/A" : revista.getNumero()) + 
+                           " | Mes: " + (revista.getMes().isEmpty() ? "N/A" : revista.getMes()) +
+                           " | Ano: " + (revista.getAno() == 0 ? "N/A" : revista.getAno());
+            } else if (m instanceof DVD) {
+                DVD dvd = (DVD) m;
+                detalhes = "Diretor: " + (dvd.getDiretor().isEmpty() ? "N/A" : dvd.getDiretor()) + 
+                           " | Duracao: " + (dvd.getDuracao() == 0 ? "N/A" : dvd.getDuracao() + " min") +
+                           " | Genero: " + (dvd.getGenero().isEmpty() ? "N/A" : dvd.getGenero());
+            }
+            
             modelo.addRow(new Object[]{
                 m.getId(),
                 m.getTipo(),
                 m.getTitulo(),
                 m.getAutor(),
+                detalhes,
                 status
             });
         }
@@ -392,14 +414,27 @@ public class BibliotecaGUI extends JFrame {
                 Material material = null;
                 
                 if (tipo.equals("Livro")) {
-                    material = new Livro(titulo, autor, id, especifico1, 
-                        Integer.parseInt(especifico2), especifico3);
+                    if (especifico1.isEmpty() && especifico2.isEmpty() && especifico3.isEmpty()) {
+                        material = new Livro(titulo, autor, id);
+                    } else {
+                        int paginas = especifico2.isEmpty() ? 0 : Integer.parseInt(especifico2);
+                        material = new Livro(titulo, autor, id, especifico1, paginas, especifico3);
+                    }
                 } else if (tipo.equals("Revista")) {
-                    material = new Revista(titulo, autor, id, 
-                        Integer.parseInt(especifico1), especifico2, Integer.parseInt(especifico3));
+                    if (especifico1.isEmpty() && especifico2.isEmpty() && especifico3.isEmpty()) {
+                        material = new Revista(titulo, autor, id);
+                    } else {
+                        int numero = especifico1.isEmpty() ? 0 : Integer.parseInt(especifico1);
+                        int ano = especifico3.isEmpty() ? 0 : Integer.parseInt(especifico3);
+                        material = new Revista(titulo, autor, id, numero, especifico2, ano);
+                    }
                 } else if (tipo.equals("DVD")) {
-                    material = new DVD(titulo, autor, id, especifico1, 
-                        Integer.parseInt(especifico2), especifico3);
+                    if (especifico1.isEmpty() && especifico2.isEmpty() && especifico3.isEmpty()) {
+                        material = new DVD(titulo, autor, id);
+                    } else {
+                        int duracao = especifico2.isEmpty() ? 0 : Integer.parseInt(especifico2);
+                        material = new DVD(titulo, autor, id, especifico1, duracao, especifico3);
+                    }
                 }
                 
                 if (material != null) {

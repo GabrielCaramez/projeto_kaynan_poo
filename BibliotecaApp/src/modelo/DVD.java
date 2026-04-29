@@ -13,6 +13,13 @@ public class DVD extends Material {
         this.genero = genero;
     }
 
+    public DVD(String titulo, String autor, String id) {
+        super(titulo, autor, id, 7);
+        this.diretor = "";
+        this.duracao = 0;
+        this.genero = "";
+    }
+
     public String getDiretor() {
         return diretor;
     }

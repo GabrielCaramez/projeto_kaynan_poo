@@ -13,6 +13,13 @@ public class Revista extends Material {
         this.ano = ano;
     }
 
+    public Revista(String titulo, String autor, String id) {
+        super(titulo, autor, id, 7);
+        this.numero = 0;
+        this.mes = "";
+        this.ano = 0;
+    }
+
     public int getNumero() {
         return numero;
     }

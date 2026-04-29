@@ -13,6 +13,13 @@ public class Livro extends Material {
         this.editora = editora;
     }
 
+    public Livro(String titulo, String autor, String id) {
+        super(titulo, autor, id, 14);
+        this.isbn = "";
+        this.numeroPaginas = 0;
+        this.editora = "";
+    }
+
     public String getIsbn() {
         return isbn;
     }
